@@ -70,7 +70,11 @@ Then, run the image with
 or similar for your Docker install. Browse to http://localhost:8000 and add some team members.
 
 ## Building/running/saving/loading docker image
+
 sudo docker build -t teams .
+
 sudo docker run -p 8000:8000 teams
+
 docker save teams > ~/teams_image.tar 
+
 docker load teams < ~/teams_image.tar 
