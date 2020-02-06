@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<!--- Team Members , for Codelitt, author Korey O'Dell --->
+<head>
+   <meta charset="utf-8">
+   <title>Team members for Codelitt, Korey O'Dell</title>
+
+   <!--- jquery first --->
+   <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+   <!--- pull in bootstrap --->
+   <!--- we need popper.js for bootstrap's dropdown --->
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+   <!--- we'll embed javascript and css right here - to keep it simple --->
+   <script type="text/javascript">
+
+   function edit_member(id) {
+      var text = "";
+      if(id) {
+         text += '<h4>Edit member</h4>';
+      }
+      else {
+         text += '<h4>Add a member</h4>';
+      }
+      text += '<div class="input-group mb-3">';
+      text += '<input name="id" id="id" type="hidden">';
+      text += '<input name="name" id="name" type="text" class="form-control" placeholder="name...">';
+      text += '<div class="dropdown">';
+      text += '<button class="btn btn-outline-secondary dropdown-toggle" type="button" name="type" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Type</button>';
+      text += '<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">';
+      text += '<a class="dropdown-item" onclick="employee_role();return false;" href="#">Employee</a>';
+      text += '<a class="dropdown-item" onclick="contract_duration();return false;" href="#">Contractor</a>';
+      text += '</div>';
+      text += '</div>';
+      text += '<input name="employee_contractor" id="employee_contractor" type="hidden">';
+      text += '<span id="role_contract_duration"><input id="i_role_contract_duration" name="i_role_contract_duration" type="text" disabled class="form-control" placeholder="..."></span>';
+      text += '<input name="tags" id="tags" type="text" class="form-control" placeholder="tags...">';
+      text += '<div class="input-group-prepend">';
+      text += '<button class="btn btn-outline-secondary" type="button" onclick="update_member();return false;">';
+      if(id) {
+         text += 'update</button>';
+      }
+      else {
+         text += 'add</button>';
+      }
+      text += '</div>';
+      text += '</div>';
+      $("#workspace").html(text);
+
+      if(id) {
+         $.post("/retrieve_member", {id: id}, function(result){
+            var fields = result.split("|||");
+            $('#id').val(fields[0]);
+            $('#name').val(fields[1]);
+            $('#employee_contractor').val(fields[2]);
+            $('#i_role_contract_duration').prop('disabled', false);
+            $('#i_role_contract_duration').val(fields[3]);
+            $('#tags').val(fields[4]);
+         });
+      }
+      $("#results").html('');
+   }
+
+   function employee_role() {
+      $('#employee_contractor').val('employee');
+      var text = '<input name="i_role_contract_duration" id="i_role_contract_duration" type="text" class="form-control" placeholder="Role...">';
+      $("#role_contract_duration").html(text);
+   }
+
+   function contract_duration() {
+      $('#employee_contractor').val('contractor');
+      var text = '<input name="i_role_contract_duration" id="i_role_contract_duration" type="text" class="form-control" placeholder="Contract duration...">';
+      $("#role_contract_duration").html(text);
+   }
+
+   function update_member() {
+      $.post("/update_member", $('#myform').serialize(), function(result){$('#workspace').html(result);
+      });
+   }
+
+   function search_member() {
+      var text = "";
+      text += '<h4>Search for member(s)</h4>';
+      text += '<div class="input-group mb-3">';
+      text += '<input name="search_params" id="search_params" type="text" class="form-control" placeholder="search..." onkeypress="if(event.keyCode == 13){return false;}" onkeyup="search_query();">';
+      text += '</div>';
+      $("#workspace").html(text);
+   }
+
+   function search_query() {
+      $.post("/search_member", $('#myform').serialize(), function(result){
+         var text = '<div class="row">';
+         text += '<div class="col c_bold">Name</div>';
+         text += '<div class="col c_bold">Type</div>';
+         text += '<div class="col c_bold">Role | Contract Duration</div>';
+         text += '<div class="col c_bold">Tags</div>';
+         text += '<div class="col c_bold">Actions</div>';
+         text += '</div>';
+         var records;
+         records = result.split("\n");
+         for (var i = 0; i < records.length-1; i++) {
+            text += '<div class="row">';
+            var fields = records[i].split("|||");
+            for(var j = 1; j < fields.length-1; j++) {
+               text += '<div class="col">'+fields[j]+'</div>';
+            }
+            text += '<div class="col"><button class="btn btn-outline-secondary" onclick="edit_member('+fields[0]+');return false;">edit</button>';
+            text += '<button class="btn btn-outline-secondary" onclick="delete_member('+fields[0]+');return false;">delete</button></div>';
+            text += "</div>";
+         }
+         $('#results').html(text);
+      });
+   }
+
+   function delete_member(id) {
+      $.post("/delete_member", {id: id}, function(result){search_query()});
+   }
+                               
+   </script>
+   <style>
+      .spacer { line-height:2em; }
+      .title { text-decoration: bold; font-size:2.0em; }
+      .c_bold { text-decoration: bold; font-size:1.1em; }
+   </style>
+</head>
+  
+<body>
+  <div class="container">
+    <form id="myform">
+    <div>
+      <div class="title">Codelitt Team Members</div>
+      <button class="btn btn-outline-secondary" onclick="edit_member();return false;">Add</button>
+      <button class="btn btn-outline-secondary" onclick="search_member();return false;">Search</button>
+    </div>
+    <div class="spacer">
+      &nbsp;
+    </div>
+    <div id="workspace">
+    </div>
+    <div id="results">
+    </div>
+    </form>
+  </div>
+</body>
+</html>
